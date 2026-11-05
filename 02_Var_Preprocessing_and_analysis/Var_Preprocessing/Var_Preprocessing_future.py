@@ -3,7 +3,7 @@
 
 # Purpose: Preprocess CMIP6 data: Regrid, Spatial and temporal selection, change calendar, and save to netCDF files.
 
-# Author: Onno Nennecke on 03.06.2025 Modified: 09.02.2026
+# Author: Onno Nennecke on 03.06.2025 Modified: 03.11.2026
 
 # Input data: 
 
@@ -14,7 +14,7 @@
 
 # Output data:
 
-#     - This file lies here: /climca/people/onennecke/not_debiased_data_future/
+#     - This file lies here: /climca/people/onennecke/not_debiased_data_future/ or /climca/people/onennecke/not_debiased_data_future_2005_2024_ref/
 ###################################################################################
 
 
@@ -22,12 +22,16 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 import os
 import glob
 import cftime
 import time
 import re
 import multiprocessing
+
+
 
 # Importing functions
 import Functions.grid_func as grid_func
@@ -56,7 +60,9 @@ grid_def = '*'
 version = '*'
 
 # Read warming thresholds for each model
-warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds.csv')
+# warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds.csv') # Threshold for reference period 2014-2024
+warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds_2005_2024.csv') # Threshold for reference period 2005-2024
+
 # warming_thresholds
 
 # for i in range(len(df[0:2])):
@@ -80,7 +86,8 @@ def one_run(i):
     new_time = xr.DataArray(time_range, dims='time')
     
     for var in variables:
-        output_file = f'/climca/people/onennecke/not_debiased_data_future/{ESM}_{run}_{var}.nc'
+        # output_file = f'/climca/people/onennecke/not_debiased_data_future/{ESM}_{run}_{var}.nc' # Old ref period 2014-2024
+        output_file = f'/climca/people/onennecke/not_debiased_data_future_2005_2024_ref/{ESM}_{run}_{var}.nc' # New ref period 2005-2024
         if os.path.isfile( output_file ) == False:
             
             print(f'Processing variable: {var}')
@@ -135,7 +142,8 @@ def one_run(i):
             # break
     var = 'psl'
 
-    output_file = f'/climca/people/onennecke/not_debiased_data_future/{ESM}_{run}_{var}.nc'
+    # output_file = f'/climca/people/onennecke/not_debiased_data_future/{ESM}_{run}_{var}.nc' # Old ref period 2014-2024
+    output_file = f'/climca/people/onennecke/not_debiased_data_future_2005_2024_ref/{ESM}_{run}_{var}.nc' # New ref period 2005-2024
 
     if os.path.isfile( output_file ) == False:
 
@@ -188,8 +196,8 @@ def one_run(i):
 
         print('Run time: ', int(np.floor((time.time()  - run_time) / 60)),'m', round((time.time()  - run_time) % 60,1),'s')
 
-for i in range(len(df)):
-    one_run(i)
+# for i in range(len(df)):
+#     one_run(i)
 
-# p = multiprocessing.Pool(64)
-# p.map(one_run, range(len(df)))
+p = multiprocessing.Pool(64)
+p.map(one_run, range(len(df)))

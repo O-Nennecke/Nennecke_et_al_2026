@@ -3,11 +3,11 @@
 
 # Purpose: Preprocess CESM2_LE data: Regrid, Spatial and temporal selection, change calendar, and save to netCDF files.
 
-# Author: Onno Nennecke on 03.06.2025 Modified: 16.02.2026
+# Author: Onno Nennecke on 03.06.2025 Modified: 03.11.2026
 
 # Input data: 
 
-#     - warming_year data lies here: /home/onennecke/CMIP_models/warming_thresholds.csv
+#     - warming_year data lies here: /home/onennecke/CMIP_models/warming_thresholds.csv or /home/onennecke/CMIP_models/warming_thresholds_2005_2024.csv
 #     - CMIP6 data lies here: /climca/data/CMIP6
 #     - CMIP6 runs are defined in the csv file: /home/onennecke/CMIP_models/CMIP6_runs.csv
 #     - Alpha mask for rescaling wind speed lies here: /home/onennecke/Capacity_data/alpha_land_sea.nc
@@ -15,13 +15,15 @@
 # Output data:
 
 #     - This file lies here: /climca/people/onennecke/not_debiased_data/
-#     - This file lies here: /climca/people/onennecke/not_debiased_data_future/
+#     - This file lies here: /climca/people/onennecke/not_debiased_data_future/ or /climca/people/onennecke/not_debiased_data_future_2005_2024_ref/
 ###################################################################################
 
 # Importing libraries
 import xarray as xr
 import numpy as np
 import pandas as pd
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 import os
 import glob
 import cftime
@@ -42,7 +44,8 @@ alpha_mask = xr.open_dataset('/home/onennecke/Capacity_data/alpha_land_sea.nc')
 df = pd.read_csv("/home/onennecke/CMIP_models/CESM2_LE_runs_long.csv", dtype=str)
 # df = pd.read_csv("/home/onennecke/CMIP_models/CESM2_LE_runs.csv", dtype=str)
 
-warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds.csv')
+# warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds.csv') # Threshold for reference period 2014-2024
+warming_thresholds = pd.read_csv('/home/onennecke/CMIP_models/warming_thresholds_2005_2024.csv') # Threshold for reference period 2005-2024
 
 # Load climate data
 variables = ['U10', 'FSDS', 'TREFHT', 'TREFHTMX'] # List of variables
@@ -96,10 +99,10 @@ def one_run(i):
         if os.path.isfile( output_file ) == False:
             
             print(f'Processing variable: {var} 2015-2024')
-            if var == 'TREFHT':
-                path = f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc'
-            else:
-                path = f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc' 
+            # if var == 'TREFHT':
+            #     path = f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc'
+            # else:
+            path = f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc' 
             files = [f for f in glob.glob(path) if f.endswith('.nc')]
 
             nc = xr.open_mfdataset(files, preprocess=grid_func.preprocess)
@@ -127,17 +130,18 @@ def one_run(i):
 
             print('Run time: ', int(np.floor((time.time()  - run_time) / 60)),'m', round((time.time()  - run_time) % 60,1),'s', '\n')
             
-        output_file = f'/climca/people/onennecke/not_debiased_data_future/CESM2_{run_id}_{output_var}.nc'
+        # output_file = f'/climca/people/onennecke/not_debiased_data_future/CESM2_{run_id}_{output_var}.nc' # Old ref period 2014-2024
+        output_file = f'/climca/people/onennecke/not_debiased_data_future_2005_2024_ref/CESM2_{run_id}_{output_var}.nc'
 
         if os.path.isfile( output_file ) == False:
             
             print(f'Processing variable: {var} {start_year_future}-{end_year_future}')
-            if var == 'TREFHT':
-                files = [f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
-                         f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
-            else:
-                files = [f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
-                         f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
+            # if var == 'TREFHT':
+            #     files = [f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
+            #              f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
+            # else:
+            files = [f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
+                        f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
 
             nc = xr.open_mfdataset(files, preprocess=grid_func.preprocess)
             nc = nc[[var]]
@@ -176,10 +180,10 @@ def one_run(i):
         run_time = time.time()
 
         print(f'Processing variable: {var} 2015-2024')
-        if var == 'TREFHT':
-            path = f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc'
-        else:
-            path = f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc' 
+        # if var == 'TREFHT':
+        #     path = f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc'
+        # else:
+        path = f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20150101-20241231.nc' 
         files = [f for f in glob.glob(path) if f.endswith('.nc')]
 
 
@@ -204,19 +208,20 @@ def one_run(i):
 
         print('Run time: ', int(np.floor((time.time()  - run_time) / 60)),'m', round((time.time()  - run_time) % 60,1),'s')
         
-    output_file = f'/climca/people/onennecke/not_debiased_data_future/CESM2_{run_id}_{output_var}.nc'
+    # output_file = f'/climca/people/onennecke/not_debiased_data_future/CESM2_{run_id}_{output_var}.nc' # Old ref period 2014-2024
+    output_file = f'/climca/people/onennecke/not_debiased_data_future_2005_2024_ref/CESM2_{run_id}_{output_var}.nc'
 
     if os.path.isfile( output_file ) == False:
 
         run_time = time.time()
 
         print(f'Processing variable: {var} {start_year_future}-{end_year_future}')
-        if var == 'TREFHT':
-            files = [f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
-                     f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
-        else:
-            files = [f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
-                        f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
+        # if var == 'TREFHT':
+        #     files = [f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
+        #              f'/climca/data/CESM2_LE/TREFHT_new/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
+        # else:
+        files = [f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20350101-20441231.nc', 
+                    f'/climca/data/CESM2_LE/{var}/day_raw/b.e21.{experiment}.f09_g17.{LE_ID_frcng}.{ensemble_member}.cam.h1.{var}.20450101-20541231.nc']
 
         nc = xr.open_mfdataset(files, preprocess=grid_func.preprocess_psl)
 
